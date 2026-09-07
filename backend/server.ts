@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -101,6 +102,73 @@ async function bootstrap(): Promise<void> {
         skipDuplicates: true,
       });
       logger.info('✅ Default colleges auto-created');
+    }
+
+    const studentCount = await prisma.student.count();
+    if (studentCount === 0) {
+      logger.info('🌱 Empty student table: creating demo student, alumni, and admin accounts...');
+      const studentHash = await bcrypt.hash('secret123', 10);
+      const adminHash = await bcrypt.hash('admin123', 10);
+
+      const colleges = ['skit', 'nps', 'christ', 'rv'];
+      for (const col of colleges) {
+        await prisma.admin.createMany({
+          data: [{
+            collegeId: col,
+            email: `admin@${col}.alumni.local`,
+            username: `admin_${col}`,
+            fullName: `Admin ${col.toUpperCase()}`,
+            passwordHash: adminHash,
+            isActive: true,
+          }],
+          skipDuplicates: true,
+        });
+
+        await prisma.student.createMany({
+          data: [{
+            collegeId: col,
+            email: `student0001.${col}@alumni.local`,
+            passwordHash: studentHash,
+            fullName: `Demo Student ${col.toUpperCase()}`,
+            department: 'CSE',
+            year: 4,
+            rollNumber: `${col.toUpperCase()}001`,
+            phone: '9876543210',
+            bio: `Student at ${col.toUpperCase()}`,
+            headline: 'Aspiring Software Engineer',
+            location: 'Bangalore, India',
+            skills: 'JavaScript, React, Node.js',
+            isActive: true,
+            isApproved: true,
+          }],
+          skipDuplicates: true,
+        });
+
+        await prisma.alumni.createMany({
+          data: [{
+            collegeId: col,
+            email: `alumni0001.${col}@alumni.local`,
+            passwordHash: studentHash,
+            fullName: `Demo Alumni ${col.toUpperCase()}`,
+            department: 'CSE',
+            graduationYear: 2023,
+            company: 'Google',
+            designation: 'Software Engineer',
+            phone: '9876543211',
+            bio: `Alumni at ${col.toUpperCase()}`,
+            headline: 'Software Engineer @ Google',
+            location: 'Bangalore, India',
+            skills: 'TypeScript, React, Node.js, Cloud',
+            availableMentorship: true,
+            availableReferral: true,
+            status: 'approved',
+            isActive: true,
+            isApproved: true,
+          }],
+          skipDuplicates: true,
+        });
+      }
+      logger.info('✅ Demo accounts auto-created');
     }
 
     app.listen(env.PORT, () => {
