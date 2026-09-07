@@ -25,9 +25,9 @@ function isAllowedOrigin(origin: string | undefined): boolean {
     const hostname = (url.hostname || '').toLowerCase();
     const port = url.port || (url.protocol === 'https:' ? '443' : '80');
     if (
-      url.protocol === 'http:' &&
-      port === '3000' &&
-      (hostname.endsWith('.lvh.me') || hostname.endsWith('.alumni.local'))
+      hostname.endsWith('.lvh.me') ||
+      hostname.endsWith('.alumni.local') ||
+      hostname.endsWith('.onrender.com')
     ) {
       return true;
     }
