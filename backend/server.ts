@@ -88,6 +88,21 @@ async function bootstrap(): Promise<void> {
     await prisma.$connect();
     logger.info('✅ Database connected via Prisma');
 
+    const collegeCount = await prisma.college.count();
+    if (collegeCount === 0) {
+      logger.info('🌱 Empty database detected: creating default colleges...');
+      await prisma.college.createMany({
+        data: [
+          { id: 'skit', name: 'SKIT College of Engineering', subdomain: 'skit', location: 'Jaipur, Rajasthan', code: 'SKIT' },
+          { id: 'nps', name: 'National Public School', subdomain: 'nps', location: 'Bangalore, Karnataka', code: 'NPS' },
+          { id: 'christ', name: 'Christ University', subdomain: 'christ', location: 'Bangalore, Karnataka', code: 'CHRIST' },
+          { id: 'rv', name: 'RV College of Engineering', subdomain: 'rv', location: 'Bangalore, Karnataka', code: 'RVCE' },
+        ],
+        skipDuplicates: true,
+      });
+      logger.info('✅ Default colleges auto-created');
+    }
+
     app.listen(env.PORT, () => {
       logger.info(`🚀 Server running on port ${env.PORT} [${env.NODE_ENV}]`);
     });
